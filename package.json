@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@libsql/client": "^0.18.0",
-    "@prisma/adapter-libsql": "^7.10.0",
+    "@prisma/adapter-libsql": "^5.22.0",
     "@prisma/client": "^5.22.0",
     "aedes": "^0.51.2",
     "bcryptjs": "^2.4.3",
