@@ -1,0 +1,87 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            String        @id @default(uuid())
+  name          String
+  email         String        @unique
+  password_hash String
+  rfid_uid      String?       @unique
+  role          String        @default("STUDENT") // STUDENT | ADMIN
+  created_at    DateTime      @default(now())
+  
+  donated_books Book[]        @relation("DonorBooks")
+  transactions  Transaction[]
+}
+
+model Locker {
+  id                String        @id // e.g. "locker-01"
+  location_name     String
+  compartment_count Int           @default(4)
+  status            String        @default("OFFLINE") // ONLINE | OFFLINE
+  last_seen         DateTime      @default(now())
+  
+  compartments      Compartment[]
+  transactions      Transaction[]
+  device_logs       DeviceLog[]
+}
+
+model Compartment {
+  id                 String        @id @default(uuid())
+  locker_id          String
+  compartment_number Int
+  status             String        @default("EMPTY") // EMPTY | OCCUPIED | LOCKED | FAULTY
+  
+  locker             Locker        @relation(fields: [locker_id], references: [id], onDelete: Cascade)
+  book               Book?
+  transactions       Transaction[]
+
+  @@unique([locker_id, compartment_number])
+}
+
+model Book {
+  id             String        @id @default(uuid())
+  title          String
+  author         String
+  isbn           String?
+  donor_user_id  String?
+  compartment_id String?       @unique
+  status         String        @default("AVAILABLE") // AVAILABLE | BORROWED | RESERVED
+  created_at     DateTime      @default(now())
+
+  donor          User?         @relation("DonorBooks", fields: [donor_user_id], references: [id], onDelete: SetNull)
+  compartment    Compartment?  @relation(fields: [compartment_id], references: [id], onDelete: SetNull)
+  transactions   Transaction[]
+}
+
+model Transaction {
+  id             String      @id @default(uuid())
+  user_id        String
+  book_id        String?
+  locker_id      String
+  compartment_id String?
+  type           String      // DONATE | BORROW | RETURN | UNLOCK
+  timestamp      DateTime    @default(now())
+  method         String      @default("RFID") // RFID | QR | REMOTE
+
+  user           User        @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  book           Book?       @relation(fields: [book_id], references: [id], onDelete: SetNull)
+  locker         Locker      @relation(fields: [locker_id], references: [id], onDelete: Cascade)
+  compartment    Compartment? @relation(fields: [compartment_id], references: [id], onDelete: SetNull)
+}
+
+model DeviceLog {
+  id           String   @id @default(uuid())
+  locker_id    String
+  event_type   String   // RFID_SCAN | SENSOR_TRIGGER | LOCK_OPEN | LOCK_CLOSED | HEARTBEAT | STATUS_CHANGE
+  payload_json String?
+  created_at   DateTime @default(now())
+
+  locker       Locker   @relation(fields: [locker_id], references: [id], onDelete: Cascade)
+}
