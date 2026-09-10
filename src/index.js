@@ -51,6 +51,20 @@ app.use('/api/lockers', lockerRoutes);
 app.use('/api/books', bookRoutes);
 app.use('/api/transactions', txRoutes);
 app.use('/api/rfid', rfidRoutes);
+// System Reset Endpoint (Temporary for wiping fake data)
+app.get('/api/system/reset', async (req, res) => {
+  try {
+    const { prisma } = await import('./config/db.js');
+    await prisma.transaction.deleteMany();
+    await prisma.book.deleteMany();
+    await prisma.compartment.deleteMany();
+    await prisma.locker.deleteMany();
+    await prisma.user.deleteMany();
+    res.json({ message: 'All fake data removed. Database is now completely empty.' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // API Root Route - Backend Status Dashboard
 app.get('/', async (req, res) => {
