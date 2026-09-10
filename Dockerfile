@@ -1,4 +1,7 @@
-FROM node:20-alpine
+FROM node:20-slim
+
+# Install OpenSSL which is required by Prisma engines
+RUN apt-get update -y && apt-get install -y openssl
 
 WORKDIR /app
 
