@@ -1,8 +1,26 @@
 import { PrismaClient } from '@prisma/client';
+import { PrismaLibSQL } from '@prisma/adapter-libsql';
+import { createClient } from '@libsql/client';
+import { config } from './env.js';
 
-export const prisma = new PrismaClient({
-  log: process.env.NODE_ENV === 'development' ? ['warn', 'error'] : ['error'],
-});
+let prisma;
+
+if (config.tursoDatabaseUrl) {
+  const libsql = createClient({
+    url: config.tursoDatabaseUrl,
+    authToken: config.tursoAuthToken,
+  });
+  const adapter = new PrismaLibSQL(libsql);
+  prisma = new PrismaClient({ adapter, log: process.env.NODE_ENV === 'development' ? ['warn', 'error'] : ['error'] });
+  console.log('🔗 Configured Prisma with Turso libSQL Adapter');
+} else {
+  prisma = new PrismaClient({
+    log: process.env.NODE_ENV === 'development' ? ['warn', 'error'] : ['error'],
+  });
+  console.log('🔗 Configured Prisma with standard SQLite driver');
+}
+
+export { prisma };
 
 export async function connectDB() {
   try {

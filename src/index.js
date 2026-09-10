@@ -1,4 +1,5 @@
 import http from 'http';
+import { execSync } from 'child_process';
 import express from 'express';
 import cors from 'cors';
 import { config } from './config/env.js';
@@ -160,6 +161,14 @@ app.use(errorHandler);
 // Initialize real-time servers
 async function startServer() {
   try {
+    console.log('🔄 Syncing database schema (for Render ephemeral environments)...');
+    try {
+      execSync('npx prisma generate', { stdio: 'inherit' });
+      execSync('npx prisma db push --accept-data-loss', { stdio: 'inherit' });
+    } catch (e) {
+      console.warn('⚠️ Failed to sync database schema:', e.message);
+    }
+
     // 1. Connect database
     await connectDB();
 
