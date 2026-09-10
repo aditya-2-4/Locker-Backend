@@ -52,22 +52,22 @@ app.use('/api/books', bookRoutes);
 app.use('/api/transactions', txRoutes);
 app.use('/api/rfid', rfidRoutes);
 
-import path from 'path';
-import { fileURLToPath } from 'url';
+// API Root Route
+app.get('/', (req, res) => {
+  res.json({
+    message: 'Welcome to the Smart Community Book Exchange Locker API',
+    status: 'Running',
+    docs: '/api/health'
+  });
+});
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const frontendDist = path.resolve(__dirname, '../../frontend/dist');
-
-// Serve static frontend assets from frontend/dist
-app.use(express.static(frontendDist));
-
-// SPA fallback for frontend client routing (serve index.html for non-API routes)
-app.get('*', (req, res, next) => {
-  if (req.url.startsWith('/api') || req.url.startsWith('/socket.io')) {
-    return next();
+// Fallback for unknown API routes
+app.use((req, res, next) => {
+  if (req.url.startsWith('/api')) {
+    res.status(404).json({ error: 'API endpoint not found' });
+  } else {
+    next();
   }
-  res.sendFile(path.join(frontendDist, 'index.html'));
 });
 
 // Error Handler
