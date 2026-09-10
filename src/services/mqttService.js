@@ -176,12 +176,31 @@ async function handleRFIDScan(lockerId, payload) {
     },
   });
 
+  // Permanently save the door UNLOCK transaction
+  const tx = await prisma.transaction.create({
+    data: {
+      user_id: user.id,
+      locker_id: lockerId,
+      compartment_id: targetCompartment ? targetCompartment.id : null,
+      type: 'UNLOCK',
+      method: 'RFID',
+    },
+    include: {
+      user: { select: { id: true, name: true, email: true } },
+      locker: true,
+      compartment: true
+    }
+  });
+
   emitEvent('device:log', {
     lockerId,
     eventType: 'RFID_SCAN_SUCCESS',
     payload: { uid, userName: user.name, role: user.role },
     createdAt: new Date().toISOString(),
   });
+
+  // Also emit the transaction so it shows in the ActivityFeed
+  emitEvent('transaction:new', tx);
 
   // EMIT PROMINENT RFID SCANNED EVENT WITH FULL CARD DETAILS FOR WEB POPUP
   emitEvent('rfid:scanned', {
