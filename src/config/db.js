@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { PrismaLibSql } from '@prisma/adapter-libsql';
+import { PrismaLibSQL } from '@prisma/adapter-libsql';
 import { createClient } from '@libsql/client';
 import { config } from './env.js';
 
@@ -10,7 +10,7 @@ if (config.tursoDatabaseUrl) {
     url: config.tursoDatabaseUrl,
     authToken: config.tursoAuthToken,
   });
-  const adapter = new PrismaLibSql(libsql);
+  const adapter = new PrismaLibSQL(libsql);
   prisma = new PrismaClient({ adapter, log: process.env.NODE_ENV === 'development' ? ['warn', 'error'] : ['error'] });
   console.log('🔗 Configured Prisma with Turso libSQL Adapter');
 } else {
